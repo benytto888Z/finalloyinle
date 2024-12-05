@@ -1,0 +1,102 @@
+
+if(!cfgCtrl.partyFinish){
+sendInfosStartParty();
+}
+print("partyInfosLive");
+print(cfgCtrl.partyInfosLive);
+
+if(stream.data != null && stream.data!.startTurn) {
+//  print("enable starting turn");
+startCircuitTime = true;
+startPartyTime = true;
+if(!turnStart){
+nbP1Fault = 0 ;
+nbP2Fault = 0;
+nbP1Level = 0;
+nbP2Level = 0;
+
+finishTurnP1 = false;
+finishTurnP2 = false;
+
+turnTimeP1 = "00 M : 00 S";
+turnTimeP2 = "00 M : 00 S";
+
+
+// cfgCtrl.setTurnsFinishForPlayers(false);
+
+turnStart = true;
+minutes = 0;
+}
+
+if (stream.data != null && stream.data!.hasTriggered) {
+// print("some player touch the circuitt in loyinleesp32");
+int playerCircuit = stream.data!.circuitTouchNB;
+// int playerCircuit = cfgCtrl.partyInfosLive["circuitTouchNB"];
+int levelTouchNumberPos = stream.data!.levelNB;
+
+if (playerCircuit == 1 && levelTouchNumberPos == 0) {
+nbP1Fault = nbP1Fault + 1;
+}
+
+if (playerCircuit == 1 && levelTouchNumberPos != 0) {
+nbP1Level = levelTouchNumberPos;
+}
+
+if (playerCircuit == 2 && levelTouchNumberPos == 0) {
+nbP2Fault = nbP2Fault + 1;
+}
+
+if (playerCircuit == 2 && levelTouchNumberPos != 0) {
+nbP2Level = levelTouchNumberPos;
+}
+
+
+// finish last level for P1 and P2
+
+
+if (playerCircuit == 1 && levelTouchNumberPos == 5 && finishTurnP1==false) {
+int nbsec = secDuration - cfgCtrl.timerPeriodic;
+turnTimeP1 = "0$minutes mn:${nbsec.toString().padLeft(1, '0')} s";
+finishTurnP1 = true;
+sendInfosFinishTurnP1();
+
+}
+
+if (playerCircuit == 2 && levelTouchNumberPos == 5 && finishTurnP2==false) {
+int nbsec = secDuration - cfgCtrl.timerPeriodic;
+turnTimeP2 = "0$minutes mn : ${nbsec.toString().padLeft(1, '0')} s";
+finishTurnP2 = true;
+sendInfosFinishTurnP2();
+}
+
+/* print(stream.data!.levelNB.toString());
+                        print(stream.data!.circuitTouchNB.toString());*/
+
+scoreP1 = oldScoreP1 + AppUtility.calculateScore(nbP1Level, nbP1Fault);
+scoreP2 = oldScoreP2 + AppUtility.calculateScore(nbP2Level, nbP2Fault);
+
+if (scoreP1 > scoreP2) {
+bestScore = scoreP1;
+bestPlayer = cfgCtrl.playersName['pln1'];
+isPlayersEqual = false;
+} else if (scoreP2 > scoreP1) {
+bestScore = scoreP2;
+bestPlayer = cfgCtrl.playersName['pln2'];
+isPlayersEqual = false;
+} else {
+isPlayersEqual = true;
+}
+
+if(finishTurnP1 && finishTurnP2){
+cfgCtrl.setTurnsFinishForPlayers(true);
+oldScoreP1 = scoreP1;
+oldScoreP2 = scoreP2;
+sendInfosFinishTurn();
+}
+
+}
+}else{
+startCircuitTime = false;
+turnStart = false;
+cfgCtrl.setTurnsFinishForPlayers(false);
+}
